@@ -8,13 +8,6 @@ import org.apache.spark.rdd.RDD
 
 import scala.io.Source
 
-// IATA_CODE,
-// AIRPORT,
-// CITY,
-// STATE,
-// COUNTRY,
-// LATITUDE,
-// LONGITUDE
 class CsvReaderAirport extends CsvReader[Airport] with SessionWrapper {
 
   override def read(path: String): RDD[Airport] = {

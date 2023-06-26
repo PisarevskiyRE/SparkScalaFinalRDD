@@ -2,12 +2,15 @@ package com.example
 package readers
 
 import jobs.SessionWrapper
-import schemas.{Airport, Flight}
+import schemas.Flight
 
 import org.apache.spark.rdd.RDD
 
+import java.sql.Date
 import scala.io.Source
 
+
+  //TODO добавить нормальный вункции для matсh и date
 
 class CsvReaderFlights extends CsvReader[Flight] with SessionWrapper {
 
@@ -80,7 +83,9 @@ class CsvReaderFlights extends CsvReader[Flight] with SessionWrapper {
           values(27),
           values(28),
           values(29),
-          values(30))
+          values(30),
+          Date.valueOf(values(0) + "-" + values(1)+ "-" + values(2))
+        )
         ).toList
 
     val flightRDD: RDD[Flight] = spark.sparkContext.parallelize(readFile(path))

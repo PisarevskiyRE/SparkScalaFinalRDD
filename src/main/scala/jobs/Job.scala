@@ -1,8 +1,9 @@
 package com.example
 package jobs
 
-import com.example.readers.{CsvReaderAirline, CsvReaderAirport, CsvReaderFilePath, CsvReaderFlights}
-import com.example.schemas.{Airline, Airport, FilePath, Flight}
+import com.example.readers.CsvReaderMetricStore.getMetricStoreByName
+import com.example.readers.{CsvReaderAirline, CsvReaderAirport, CsvReaderFilePath, CsvReaderFlights, CsvReaderMetricStore}
+import com.example.schemas.{Airline, Airport, FilePath, Flight, MetricStore}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
@@ -25,10 +26,20 @@ class Job(config: JobConfig) extends SessionWrapper {
     val airportsRDD: RDD[Airport] = CsvReaderAirport().read(airportsFilePath)
     val flightsRDD: RDD[Flight] = CsvReaderFlights().read(flightsFilePath)
 
-    airlineRDD.foreach(println)
-    airportsRDD.foreach(println)
-    flightsRDD.foreach(println)
+//    airlineRDD.foreach(println)
+//    airportsRDD.foreach(println)
+//    flightsRDD.foreach(println)
 
+
+    val initMetricStoreRDD = CsvReaderMetricStore().read(config.storePath)
+//    initMetricStoreRDD.foreach(println)
+
+    val topAirportsByFlightsMetricStore: MetricStore = getMetricStoreByName(initMetricStoreRDD, "TopAirportsByFlights")
+//    println(topAirportsByFlightsMetricStore)
+
+    val TopAirportsByFlights = metrics.TopAirportsByFlights(flightsRDD,  topAirportsByFlightsMetricStore).calculate()
+
+    TopAirportsByFlights.collect().foreach(println)
   }
 }
 
