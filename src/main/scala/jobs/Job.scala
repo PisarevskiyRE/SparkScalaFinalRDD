@@ -1,9 +1,11 @@
 package com.example
 package jobs
 
+import com.example.metrics.TopAirportsByFlights
 import com.example.readers.CsvReaderMetricStore.getMetricStoreByName
 import com.example.readers.{CsvReaderAirline, CsvReaderAirport, CsvReaderFilePath, CsvReaderFlights, CsvReaderMetricStore}
-import com.example.schemas.{Airline, Airport, FilePath, Flight, MetricStore}
+import com.example.schemas.{Airline, Airport, FilePath, Flight, MetricStore, TopAirportByFlight}
+import com.example.writers.CsvWriterTopAirportByFlight
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
@@ -37,9 +39,19 @@ class Job(config: JobConfig) extends SessionWrapper {
     val topAirportsByFlightsMetricStore: MetricStore = getMetricStoreByName(initMetricStoreRDD, "TopAirportsByFlights")
 //    println(topAirportsByFlightsMetricStore)
 
-    val TopAirportsByFlights = metrics.TopAirportsByFlights(flightsRDD,  topAirportsByFlightsMetricStore).calculate()
+    val ( a ,b ,c) = metrics.TopAirportsByFlights(flightsRDD,  topAirportsByFlightsMetricStore).calculate()
 
-    TopAirportsByFlights.collect().foreach(println)
+
+    a.foreach(println)
+    b.foreach(println)
+    println(c)
+
+
+
+    CsvWriterTopAirportByFlight().write(a, c.pathAll)
+    CsvWriterTopAirportByFlight().write(b, c.path)
+
+
   }
 }
 

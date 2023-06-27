@@ -12,9 +12,9 @@ import java.time.{LocalDate, LocalDateTime}
 import scala.math.Ordered.orderingToOrdered
 
 class TopAirportsByFlights(flights: RDD[Flight],
-                           currentMetricStore: MetricStore ) {
+                           currentMetricStore: MetricStore ) extends Metric[Flight, TopAirportByFlight]{
 
-  private def filterOnDate(): RDD[Flight] = {
+   def filterOnDate(): RDD[Flight] = {
     // смотрим по какое число уэе посчитано
     val dateTo = currentMetricStore.dateTo
     // фильтруем что нужно еще посчитать
@@ -27,6 +27,8 @@ class TopAirportsByFlights(flights: RDD[Flight],
       .map(line => (line.ORIGIN_AIRPORT, 1))
       .reduceByKey(_ + _)
       .map(line => TopAirportByFlight(line._1, line._2))
+
+    implicit val ordering: Ordering[Date] = Ordering.fromLessThan[Date]((d1, d2) => d1.before(d2))
 
     val fromDate = filteredOnDate.map(x=>x.NormalizeDate).min()
     val toDate = filteredOnDate.map(x=>x.NormalizeDate).max()
@@ -72,17 +74,29 @@ class TopAirportsByFlights(flights: RDD[Flight],
 
   }
 
-  def requiredMetric(metric: RDD[Flight]): RDD[Flight] = ???
-
-  def calculate()= {
+  def calculate(): (RDD[TopAirportByFlight], RDD[TopAirportByFlight], MetricStore) = {
 
     val filteredOnDate: RDD[Flight] = filterOnDate()
 
     val (metric, newMetricStore) = getMetric(filteredOnDate)
 
-    val resultAll = mergeMetric(metric, currentMetricStore)
+    val resultAll: RDD[TopAirportByFlight] = mergeMetric(metric, currentMetricStore)
 
-    resultAll
+
+    val result: RDD[TopAirportByFlight] = spark.sparkContext.parallelize(
+      resultAll
+        .collect()
+        .sortBy(
+          currentMetricStore.order match {
+            case "desc" => -_.count
+            case "asc" => _.count
+          }
+        )
+        .take(currentMetricStore.top)
+    )
+
+
+    (resultAll, result, newMetricStore)
   }
 }
 

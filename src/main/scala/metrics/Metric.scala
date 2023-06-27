@@ -6,7 +6,7 @@ import jobs.SessionWrapper
 import com.example.schemas.MetricStore
 import org.apache.spark.rdd.RDD
 
-trait Metric[T] extends SessionWrapper{
+trait Metric[A, B] extends SessionWrapper{
   /*
     1 фитровать по дате
     2 расчет метрики
@@ -14,16 +14,12 @@ trait Metric[T] extends SessionWrapper{
     4 сохранение результата + обновление MetricStore
    */
 
+  def filterOnDate(): RDD[A]
 
-  // фильтруем DF по дате
-  def filterOnDate(): RDD[T]
+  def getMetric(filteredOnDate: RDD[A]): (RDD[B], MetricStore)
 
-  def getMetric(filteredOnDate: RDD[T]): RDD[T]
+  def mergeMetric(newMetric: RDD[B], metrciStore: MetricStore): RDD[B]
 
-  def mergeMetric(newMetric: RDD[T], metrciStore: MetricStore): Option[RDD[T]]
-
-  def requiredMetric(metric: RDD[T]): RDD[T]
-
-  def calculate(): (RDD[T], RDD[T], MetricStore)
+  def calculate(): (RDD[B], RDD[B], MetricStore)
 
 }
