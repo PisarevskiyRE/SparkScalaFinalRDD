@@ -12,4 +12,4 @@ case class MetricStore(
                         dateTo: Date,
                         path: String,
                         pathAll: String
-                      )
+                      )  extends FromFile

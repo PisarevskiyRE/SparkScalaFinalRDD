@@ -2,8 +2,7 @@ package com.example
 package metrics
 import schemas.{Airport, Flight, MetricStore, TopAirportByFlight}
 
-import com.example.readers.CsvReaderTopAirportByFlight
-
+import com.example.readers.CsvReaderFromFileTopAirportByFlight
 import org.apache.spark.rdd.RDD
 
 import java.nio.file.{Files, Paths}
@@ -59,7 +58,7 @@ class TopAirportsByFlights(flights: RDD[Flight],
 
     if (Files.exists(Paths.get(filePath))) {
 
-      val oldMetric: RDD[TopAirportByFlight] = CsvReaderTopAirportByFlight().read(metricStore.path)
+      val oldMetric: RDD[TopAirportByFlight] = CsvReaderFromFileTopAirportByFlight.csvReaderFromFileTopAirportByFlight.read(metricStore.path)
 
 
       oldMetric

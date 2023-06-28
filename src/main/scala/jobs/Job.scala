@@ -2,10 +2,10 @@ package com.example
 package jobs
 
 import com.example.metrics._
-import com.example.readers.CsvReaderMetricStore.getMetricStoreByName
-import com.example.readers.{CsvReaderAirline, CsvReaderAirport, CsvReaderFilePath, CsvReaderFlights, CsvReaderMetricStore}
+import com.example.readers.CsvReaderFromFileMetricStore.getMetricStoreByName
+import com.example.readers.{CsvReaderFromFileAirline, CsvReaderFromFileAirport, CsvReaderFromFileFilePath, CsvReaderFromFileFlights, CsvReaderFromFileMetricStore}
 import com.example.schemas.{Airline, Airport, FilePath, Flight, MetricStore, TopAirportByFlight}
-import com.example.writers.{CsvWriterOnTimeAirline, CsvWriterTopAirportByFlight}
+import com.example.writers.{CsvWriterMetricOnTimeAirline, CsvWriterMetricTopAirportByFlight}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
@@ -14,27 +14,20 @@ import scala.io.Source
 class Job(config: JobConfig) extends SessionWrapper {
   def run(): Unit = {
 
-    val csvReaderFilePath = new CsvReaderFilePath(config.readerConfig)
+    val configs: RDD[FilePath] = CsvReaderFromFileFilePath.csvReaderFromFileFilePath.read(config.configPath)
 
-    val configs: RDD[FilePath] = csvReaderFilePath.read(config.configPath)
-
-    val airlinesFilePath = csvReaderFilePath.getPathByName(configs, "airlines")
-    val airportsFilePath = csvReaderFilePath.getPathByName(configs, "airports")
-    val flightsFilePath = csvReaderFilePath.getPathByName(configs, "flights")
+    val airlinesFilePath = CsvReaderFromFileFilePath.getPathByName(configs, "airlines")
+    val airportsFilePath = CsvReaderFromFileFilePath.getPathByName(configs, "airports")
+    val flightsFilePath = CsvReaderFromFileFilePath.getPathByName(configs, "flights")
 
 
 
-    val airlineRDD: RDD[Airline] = CsvReaderAirline().read(airlinesFilePath)
-    val airportsRDD: RDD[Airport] = CsvReaderAirport().read(airportsFilePath)
-    val flightsRDD: RDD[Flight] = CsvReaderFlights().read(flightsFilePath)
+    val airlineRDD: RDD[Airline] = CsvReaderFromFileAirline.csvReaderFromFileAirline.read(airlinesFilePath)
+    val airportsRDD: RDD[Airport] = CsvReaderFromFileAirport.csvReaderFromFileAirport.read(airportsFilePath)
+    val flightsRDD: RDD[Flight] = CsvReaderFromFileFlights.csvReaderFromFileFlight.read(flightsFilePath)
 
-//    airlineRDD.foreach(println)
-//    airportsRDD.foreach(println)
-//    flightsRDD.foreach(println)
+    val initMetricStoreRDD = CsvReaderFromFileMetricStore.csvReaderFromFileMetricStore.read(config.storePath)
 
-
-    val initMetricStoreRDD = CsvReaderMetricStore().read(config.storePath)
-//    initMetricStoreRDD.foreach(println)
 
 
     /**
@@ -47,8 +40,8 @@ class Job(config: JobConfig) extends SessionWrapper {
 
 
 
-    CsvWriterTopAirportByFlight().write(topAirportsByFlights, newTopAirportsByFlightsMetricStore.path)
-    CsvWriterTopAirportByFlight().write(topAirportsByFlightsAll, newTopAirportsByFlightsMetricStore.pathAll)
+    CsvWriterMetricTopAirportByFlight.csvWriterMetricOnTimeAirline.write(topAirportsByFlights, newTopAirportsByFlightsMetricStore.path)
+    CsvWriterMetricTopAirportByFlight.csvWriterMetricOnTimeAirline.write(topAirportsByFlightsAll, newTopAirportsByFlightsMetricStore.pathAll)
 
     /**
      * 2
@@ -58,8 +51,8 @@ class Job(config: JobConfig) extends SessionWrapper {
     val (onTimeAirlinesAll, onTimeAirlines, newOnTimeAirlinesMetricStore) = metrics.OnTimeAirlines(flightsRDD, onTimeAirlinesMetricStore).calculate()
 
 
-    CsvWriterOnTimeAirline().write(onTimeAirlines, newOnTimeAirlinesMetricStore.path)
-    CsvWriterOnTimeAirline().write(onTimeAirlinesAll, newOnTimeAirlinesMetricStore.pathAll)
+    CsvWriterMetricOnTimeAirline.csvWriterMetricOnTimeAirline.write(onTimeAirlines, newOnTimeAirlinesMetricStore.path)
+    CsvWriterMetricOnTimeAirline.csvWriterMetricOnTimeAirline.write(onTimeAirlinesAll, newOnTimeAirlinesMetricStore.pathAll)
 
   }
 }

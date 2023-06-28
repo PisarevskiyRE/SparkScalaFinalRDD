@@ -36,4 +36,4 @@ case class Flight(
                     LATE_AIRCRAFT_DELAY: String,
                     WEATHER_DELAY: String,
                     NormalizeDate: Date
-                 )
+                 ) extends FromFile

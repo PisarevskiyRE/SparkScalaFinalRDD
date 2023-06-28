@@ -1,14 +1,6 @@
 package com.example
 package schemas
 
-
-// IATA_CODE,
-// AIRPORT,
-// CITY,
-// STATE,
-// COUNTRY,
-// LATITUDE,
-// LONGITUDE
 case class Airport(
                     IATA_CODE: String,
                     AIRPORT: String,
@@ -17,4 +9,4 @@ case class Airport(
                     COUNTRY: String,
                     LATITUDE: Double,
                     LONGITUDE: Double
-                  )
+                  ) extends FromFile

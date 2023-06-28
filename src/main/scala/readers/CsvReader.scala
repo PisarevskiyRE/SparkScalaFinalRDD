@@ -3,6 +3,6 @@ package readers
 
 import org.apache.spark.rdd.RDD
 
-trait CsvReader[T] {
-  def read(path: String): RDD[T]
-}
+//trait CsvReader[T] {
+//  def read(path: String): RDD[T]
+//}
