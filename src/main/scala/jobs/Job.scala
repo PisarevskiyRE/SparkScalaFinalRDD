@@ -1,11 +1,11 @@
 package com.example
 package jobs
 
-import com.example.metrics.TopAirportsByFlights
+import com.example.metrics._
 import com.example.readers.CsvReaderMetricStore.getMetricStoreByName
 import com.example.readers.{CsvReaderAirline, CsvReaderAirport, CsvReaderFilePath, CsvReaderFlights, CsvReaderMetricStore}
 import com.example.schemas.{Airline, Airport, FilePath, Flight, MetricStore, TopAirportByFlight}
-import com.example.writers.CsvWriterTopAirportByFlight
+import com.example.writers.{CsvWriterOnTimeAirline, CsvWriterTopAirportByFlight}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
@@ -36,21 +36,30 @@ class Job(config: JobConfig) extends SessionWrapper {
     val initMetricStoreRDD = CsvReaderMetricStore().read(config.storePath)
 //    initMetricStoreRDD.foreach(println)
 
+
+    /**
+     * 1
+     */
+
+
     val topAirportsByFlightsMetricStore: MetricStore = getMetricStoreByName(initMetricStoreRDD, "TopAirportsByFlights")
-//    println(topAirportsByFlightsMetricStore)
-
-    val ( a ,b ,c) = metrics.TopAirportsByFlights(flightsRDD,  topAirportsByFlightsMetricStore).calculate()
-
-
-    a.foreach(println)
-    b.foreach(println)
-    println(c)
+    val (topAirportsByFlightsAll ,topAirportsByFlights ,newTopAirportsByFlightsMetricStore) = metrics.TopAirportsByFlights(flightsRDD,  topAirportsByFlightsMetricStore).calculate()
 
 
 
-    CsvWriterTopAirportByFlight().write(a, c.pathAll)
-    CsvWriterTopAirportByFlight().write(b, c.path)
+    CsvWriterTopAirportByFlight().write(topAirportsByFlights, newTopAirportsByFlightsMetricStore.path)
+    CsvWriterTopAirportByFlight().write(topAirportsByFlightsAll, newTopAirportsByFlightsMetricStore.pathAll)
 
+    /**
+     * 2
+     */
+
+    val onTimeAirlinesMetricStore: MetricStore = getMetricStoreByName(initMetricStoreRDD, "OnTimeAirlines")
+    val (onTimeAirlinesAll, onTimeAirlines, newOnTimeAirlinesMetricStore) = metrics.OnTimeAirlines(flightsRDD, onTimeAirlinesMetricStore).calculate()
+
+
+    CsvWriterOnTimeAirline().write(onTimeAirlines, newOnTimeAirlinesMetricStore.path)
+    CsvWriterOnTimeAirline().write(onTimeAirlinesAll, newOnTimeAirlinesMetricStore.pathAll)
 
   }
 }

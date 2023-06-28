@@ -1,9 +1,9 @@
 package com.example
 package metrics
-import schemas.{Airport, Flight, MetricStore, TopAirportByFlight}
 
-import com.example.readers.CsvReaderTopAirportByFlight
+import schemas.{Flight, MetricStore, OnTimeAirline, TopAirportByFlight}
 
+import com.example.readers.{CsvReaderOnTimeAirline, CsvReaderTopAirportByFlight}
 import org.apache.spark.rdd.RDD
 
 import java.nio.file.{Files, Paths}
@@ -11,32 +11,31 @@ import java.sql.Date
 import java.time.LocalDate
 import scala.math.Ordered.orderingToOrdered
 
-class TopAirportsByFlights(flights: RDD[Flight],
-                           currentMetricStore: MetricStore ) extends Metric[Flight, TopAirportByFlight]{
-
-   def filterOnDate(): RDD[Flight] = {
+class OnTimeAirlines(flights: RDD[Flight],
+                     currentMetricStore: MetricStore )  extends Metric[Flight, OnTimeAirline] {
+  override def filterOnDate(): RDD[Flight] = {
     // смотрим по какое число уэе посчитано
     val dateTo = currentMetricStore.dateTo
     // фильтруем что нужно еще посчитать
     flights.filter(line => line.NormalizeDate > dateTo)
   }
 
-  def getMetric(filteredOnDate: RDD[Flight]): (RDD[TopAirportByFlight], MetricStore) = {
-
-    val filteredOnDateRDD = filteredOnDate
-      .map(line => (line.ORIGIN_AIRPORT, 1))
+  override def getMetric(filteredOnDate: RDD[Flight]): (RDD[OnTimeAirline], MetricStore) = {
+    val filteredOnDateRDD: RDD[OnTimeAirline] = filteredOnDate
+      .filter(line => line.CANCELLED == 0)
+      .map(line => (line.AIRLINE, 1))
       .reduceByKey(_ + _)
-      .map(line => TopAirportByFlight(line._1, line._2))
+      .map(line => OnTimeAirline(line._1, line._2))
 
 
     implicit val ordering: Ordering[Date] = Ordering.fromLessThan[Date]((d1, d2) => d1.before(d2))
 
-    val fromDate = filteredOnDate.map(x=>x.NormalizeDate).min()
-    val toDate = filteredOnDate.map(x=>x.NormalizeDate).max()
+    val fromDate = filteredOnDate.map(x => x.NormalizeDate).min()
+    val toDate = filteredOnDate.map(x => x.NormalizeDate).max()
 
-    val newMetrciStore = MetricStore(
-      metricName = "TopAirportsByFlights",
-      top = 10,
+    val newMetricStore = MetricStore(
+      metricName = "OnTimeAirlines",
+      top = currentMetricStore.top,
       order = currentMetricStore.order,
       date = Date.valueOf(LocalDate.now().toString),
       dateFrom = Date.valueOf(fromDate.toString),
@@ -44,12 +43,10 @@ class TopAirportsByFlights(flights: RDD[Flight],
       path = currentMetricStore.path,
       pathAll = currentMetricStore.pathAll)
 
-    (filteredOnDateRDD, newMetrciStore)
-
+    (filteredOnDateRDD, newMetricStore)
   }
 
-  def mergeMetric(newMetric: RDD[TopAirportByFlight], metricStore: MetricStore): RDD[TopAirportByFlight] = {
-
+  override def mergeMetric(newMetric: RDD[OnTimeAirline], metricStore: MetricStore): RDD[OnTimeAirline] = {
     //достаем старый результат
 
     val projectDir = System.getProperty("user.dir")
@@ -59,15 +56,13 @@ class TopAirportsByFlights(flights: RDD[Flight],
 
     if (Files.exists(Paths.get(filePath))) {
 
-      val oldMetric: RDD[TopAirportByFlight] = CsvReaderTopAirportByFlight().read(metricStore.path)
-
+      val oldMetric: RDD[OnTimeAirline] = CsvReaderOnTimeAirline().read(metricStore.path)
 
       oldMetric
         .union(newMetric)
-        .map(x => (x.airport, x.count))
+        .map(x => (x.airline, x.count))
         .reduceByKey(_ + _)
-        .map(line => TopAirportByFlight(line._1, line._2))
-
+        .map(line => OnTimeAirline(line._1, line._2))
 
     }
     else
@@ -75,16 +70,15 @@ class TopAirportsByFlights(flights: RDD[Flight],
 
   }
 
-  def calculate(): (RDD[TopAirportByFlight], RDD[TopAirportByFlight], MetricStore) = {
-
+  override def calculate(): (RDD[OnTimeAirline], RDD[OnTimeAirline], MetricStore) = {
     val filteredOnDate: RDD[Flight] = filterOnDate()
 
     val (metric, newMetricStore) = getMetric(filteredOnDate)
 
-    val resultAll: RDD[TopAirportByFlight] = mergeMetric(metric, currentMetricStore)
+    val resultAll: RDD[OnTimeAirline] = mergeMetric(metric, currentMetricStore)
 
 
-    val result: RDD[TopAirportByFlight] = spark.sparkContext.parallelize(
+    val result: RDD[OnTimeAirline] = spark.sparkContext.parallelize(
       resultAll
         .collect()
         .sortBy(
@@ -100,8 +94,7 @@ class TopAirportsByFlights(flights: RDD[Flight],
     (resultAll, result, newMetricStore)
   }
 }
-
-object TopAirportsByFlights {
+object OnTimeAirlines {
   def apply(flights: RDD[Flight],
-            currentStore: MetricStore) = new TopAirportsByFlights(flights, currentStore)
+            currentStore: MetricStore) = new OnTimeAirlines(flights, currentStore)
 }
