@@ -1,9 +1,9 @@
 package com.example
 package metrics
 
-import schemas.{Flight, MetricStore, OnTimeAirline, TopAirportByFlight}
+import readers.{CsvReaderFromFileFlightByDayOfWeek, CsvReaderFromFileOnTimeAirline}
+import schemas.{Flight, FlightByDayOfWeek, MetricStore, OnTimeAirline}
 
-import com.example.readers.CsvReaderFromFileOnTimeAirline
 import org.apache.spark.rdd.RDD
 
 import java.nio.file.{Files, Paths}
@@ -11,8 +11,8 @@ import java.sql.Date
 import java.time.LocalDate
 import scala.math.Ordered.orderingToOrdered
 
-class OnTimeAirlines(flights: RDD[Flight],
-                     currentMetricStore: MetricStore)  extends Metric[Flight, OnTimeAirline] {
+class FlightsByDayOfWeek(flights: RDD[Flight],
+                     currentMetricStore: MetricStore)  extends Metric[Flight, FlightByDayOfWeek] {
   override def filterOnDate(): RDD[Flight] = {
     // смотрим по какое число уэе посчитано
     val dateTo = currentMetricStore.dateTo
@@ -20,12 +20,13 @@ class OnTimeAirlines(flights: RDD[Flight],
     flights.filter(line => line.NormalizeDate > dateTo)
   }
 
-  override def getMetric(filteredOnDate: RDD[Flight]): (RDD[OnTimeAirline], MetricStore) = {
-    val filteredOnDateRDD: RDD[OnTimeAirline] = filteredOnDate
-      .filter(line => line.CANCELLED == 0)
-      .map(line => (line.AIRLINE, 1))
-      .reduceByKey(_ + _)
-      .map(line => OnTimeAirline(line._1, line._2))
+  override def getMetric(filteredOnDate: RDD[Flight]): (RDD[FlightByDayOfWeek], MetricStore) = {
+
+
+    val filteredOnDateRDD: RDD[FlightByDayOfWeek] = filteredOnDate
+      .groupBy(_.DAY_OF_WEEK) // Группируем данные по дню недели
+      .mapValues(flights => flights.map(_.ARRIVAL_DELAY).sum / flights.size.toDouble)
+      .map(x => FlightByDayOfWeek(x._1,x._2))
 
 
     implicit val ordering: Ordering[Date] = Ordering.fromLessThan[Date]((d1, d2) => d1.before(d2))
@@ -34,7 +35,7 @@ class OnTimeAirlines(flights: RDD[Flight],
     val toDate = filteredOnDate.map(x => x.NormalizeDate).max()
 
     val newMetricStore = MetricStore(
-      metricName = "OnTimeAirlines",
+      metricName = "FlightByDayOfWeek",
       top = currentMetricStore.top,
       order = currentMetricStore.order,
       date = Date.valueOf(LocalDate.now().toString),
@@ -46,7 +47,7 @@ class OnTimeAirlines(flights: RDD[Flight],
     (filteredOnDateRDD, newMetricStore)
   }
 
-  override def mergeMetric(newMetric: RDD[OnTimeAirline], metricStore: MetricStore): RDD[OnTimeAirline] = {
+  override def mergeMetric(newMetric: RDD[FlightByDayOfWeek], metricStore: MetricStore): RDD[FlightByDayOfWeek] = {
     //достаем старый результат
 
     val projectDir = System.getProperty("user.dir")
@@ -56,13 +57,13 @@ class OnTimeAirlines(flights: RDD[Flight],
 
     if (Files.exists(Paths.get(filePath))) {
 
-      val oldMetric: RDD[OnTimeAirline] = CsvReaderFromFileOnTimeAirline.csvReaderFromFileOnTimeAirline.read(metricStore.path)
+      val oldMetric: RDD[FlightByDayOfWeek] = CsvReaderFromFileFlightByDayOfWeek.csvReaderFromFileFlightByDayOfWeek.read(metricStore.path)
 
       oldMetric
         .union(newMetric)
-        .map(x => (x.airline, x.count))
+        .map(x => (x.day, x.day))
         .reduceByKey(_ + _)
-        .map(line => OnTimeAirline(line._1, line._2))
+        .map(line => FlightByDayOfWeek(line._1, line._2))
 
     }
     else
@@ -70,21 +71,21 @@ class OnTimeAirlines(flights: RDD[Flight],
 
   }
 
-  override def calculate(): (RDD[OnTimeAirline], RDD[OnTimeAirline], MetricStore) = {
+  override def calculate(): (RDD[FlightByDayOfWeek], RDD[FlightByDayOfWeek], MetricStore) = {
     val filteredOnDate: RDD[Flight] = filterOnDate()
 
     val (metric, newMetricStore) = getMetric(filteredOnDate)
 
-    val resultAll: RDD[OnTimeAirline] = mergeMetric(metric, currentMetricStore)
+    val resultAll: RDD[FlightByDayOfWeek] = mergeMetric(metric, currentMetricStore)
 
 
-    val result: RDD[OnTimeAirline] = spark.sparkContext.parallelize(
+    val result: RDD[FlightByDayOfWeek] = spark.sparkContext.parallelize(
       resultAll
         .collect()
         .sortBy(
           currentMetricStore.order match {
-            case "desc" => -_.count
-            case "asc" => _.count
+            case "desc" => -_.delay
+            case "asc" => _.delay
           }
         )
         .take(currentMetricStore.top)
@@ -94,7 +95,7 @@ class OnTimeAirlines(flights: RDD[Flight],
     (resultAll, result, newMetricStore)
   }
 }
-object OnTimeAirlines {
+object FlightsByDayOfWeek {
   def apply(flights: RDD[Flight],
-            currentStore: MetricStore) = new OnTimeAirlines(flights, currentStore)
+            currentStore: MetricStore) = new FlightsByDayOfWeek(flights, currentStore)
 }

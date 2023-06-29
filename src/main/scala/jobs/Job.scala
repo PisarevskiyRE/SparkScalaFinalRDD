@@ -5,7 +5,7 @@ import com.example.metrics._
 import com.example.readers.CsvReaderFromFileMetricStore.getMetricStoreByName
 import com.example.readers.{CsvReaderFromFileAirline, CsvReaderFromFileAirport, CsvReaderFromFileFilePath, CsvReaderFromFileFlights, CsvReaderFromFileMetricStore}
 import com.example.schemas.{Airline, Airport, FilePath, Flight, MetricStore, TopAirportByFlight}
-import com.example.writers.{CsvWriterMetricOnTimeAirline, CsvWriterMetricTopAirportByFlight}
+import com.example.writers.{CsvWriterMetricFlightByDayOfWeek, CsvWriterMetricOnTimeAirline, CsvWriterMetricTopAirlineAndAirport, CsvWriterMetricTopAirportByFlight}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
@@ -53,6 +53,28 @@ class Job(config: JobConfig) extends SessionWrapper {
 
     CsvWriterMetricOnTimeAirline.csvWriterMetricOnTimeAirline.write(onTimeAirlines, newOnTimeAirlinesMetricStore.path)
     CsvWriterMetricOnTimeAirline.csvWriterMetricOnTimeAirline.write(onTimeAirlinesAll, newOnTimeAirlinesMetricStore.pathAll)
+
+    /**
+     * 3
+     */
+
+    val topArilineAndAirportMetricStore: MetricStore = getMetricStoreByName(initMetricStoreRDD, "TopAirlinesAndAirports")
+    val (topArilineAndAirportAll, topAirlineAndAirport, newTopAirlineAndAirportMetricStore) = metrics.TopAirlinesAndAirports(flightsRDD, topArilineAndAirportMetricStore).calculate()
+
+
+    CsvWriterMetricTopAirlineAndAirport.csvWriterMetricTopArlineAndAirport.write(topAirlineAndAirport, newTopAirlineAndAirportMetricStore.path)
+    CsvWriterMetricTopAirlineAndAirport.csvWriterMetricTopArlineAndAirport.write(topArilineAndAirportAll, newTopAirlineAndAirportMetricStore.pathAll)
+
+    /**
+     * 4
+     */
+
+    val flightsByDayOfWeekMetricStore: MetricStore = getMetricStoreByName(initMetricStoreRDD, "FlightsByDayOfWeek")
+    val (flightsByDayOfWeekAll, flightsByDayOfWeek, newFlightsByDayOfWeekMetricStore) = metrics.FlightsByDayOfWeek(flightsRDD, flightsByDayOfWeekMetricStore).calculate()
+
+
+    CsvWriterMetricFlightByDayOfWeek.csvWriterMetricFlightByDayOfWeek.write(flightsByDayOfWeek, newFlightsByDayOfWeekMetricStore.path)
+    CsvWriterMetricFlightByDayOfWeek.csvWriterMetricFlightByDayOfWeek.write(flightsByDayOfWeekAll, newFlightsByDayOfWeekMetricStore.pathAll)
 
   }
 }
