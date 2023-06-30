@@ -5,7 +5,7 @@ import com.example.metrics._
 import com.example.readers.CsvReaderFromFileMetricStore.getMetricStoreByName
 import com.example.readers.{CsvReaderFromFileAirline, CsvReaderFromFileAirport, CsvReaderFromFileFilePath, CsvReaderFromFileFlights, CsvReaderFromFileMetricStore}
 import com.example.schemas.{Airline, Airport, FilePath, Flight, MetricStore, TopAirportByFlight}
-import com.example.writers.{CsvWriterMetricDelayPercent, CsvWriterMetricDelayReasons, CsvWriterMetricFlightByDayOfWeek, CsvWriterMetricOnTimeAirline, CsvWriterMetricTopAirlineAndAirport, CsvWriterMetricTopAirportByFlight}
+import com.example.writers.{CsvWriterMetricDelayPercent, CsvWriterMetricDelayReasons, CsvWriterMetricFlightByDayOfWeek, CsvWriterMetricOnTimeAirline, CsvWriterMetricStore, CsvWriterMetricTopAirlineAndAirport, CsvWriterMetricTopAirportByFlight}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
@@ -96,6 +96,18 @@ class Job(config: JobConfig) extends SessionWrapper {
 
     CsvWriterMetricDelayPercent.csvWriterMetricDelayPercent.write(delayPercents, newDelayPercentsMetricStore.path)
     CsvWriterMetricDelayPercent.csvWriterMetricDelayPercent.write(delayPercentsAll, newDelayPercentsMetricStore.pathAll)
+
+    CsvWriterMetricStore.csvWriterMetricStore.write(
+      spark.sparkContext.parallelize(Seq(
+        newTopAirportsByFlightsMetricStore,
+        newOnTimeAirlinesMetricStore,
+        newTopAirlineAndAirportMetricStore,
+        newFlightsByDayOfWeekMetricStore,
+        newDelayReasonsMetricStore,
+        newDelayPercentsMetricStore
+      )
+    ), config.storePath
+    )
   }
 }
 
