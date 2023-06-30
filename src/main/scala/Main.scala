@@ -5,7 +5,7 @@ import jobs.{Job, JobConfig, SessionWrapper}
 import com.example.jobs.Reader.ReadConfig
 import org.apache.log4j.{Level, Logger}
 
-object Main extends SessionWrapper{
+object FlightAnalyzer extends SessionWrapper{
 
   Logger.getLogger("org").setLevel(Level.ERROR)
 
@@ -15,10 +15,10 @@ object Main extends SessionWrapper{
         ReadConfig(
           hasHeader = true,
           separator = ','),
-        "src/main/resources/file_path.csv",
-        //args(0),
-        "src/main/resources/metrics_store.csv"
-        //args(1)
+        //"src/main/resources/file_path.csv",
+        args(0),
+        //"src/main/resources/metrics_store.csv"
+        args(1)
       )
     )
     job.run()
