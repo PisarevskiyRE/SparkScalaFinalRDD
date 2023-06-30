@@ -13,7 +13,7 @@ import scala.io.Source
 // todo использовать конфиг для чтения
 object CsvReaderFromFileFilePath {
 
-  val f: Array[String] => FilePath = {
+  private val f: Array[String] => FilePath = {
     line => FilePath(line(0), line(1))
   }
 

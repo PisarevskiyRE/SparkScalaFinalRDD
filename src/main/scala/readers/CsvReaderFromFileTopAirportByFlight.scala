@@ -10,7 +10,7 @@ import scala.io.Source
 
 
 object CsvReaderFromFileTopAirportByFlight{
-  val f: Array[String] => TopAirportByFlight = {
+  private val f: Array[String] => TopAirportByFlight = {
     values =>
       TopAirportByFlight(
         values(0),

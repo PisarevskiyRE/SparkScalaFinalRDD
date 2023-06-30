@@ -10,8 +10,8 @@ import java.io.{File, PrintWriter}
 
 object CsvWriterMetricOnTimeAirline{
 
-  val f: OnTimeAirline => Map[String, String] = {
-    line => Map("airport" -> line.airline, "count" -> line.count.toString)
+  private val f: OnTimeAirline => Map[String, String] = {
+    line => Map("1airport" -> line.airline, "2count" -> line.count.toString)
   }
 
   val csvWriterMetricOnTimeAirline = new CsvWriterMetric[OnTimeAirline](f)

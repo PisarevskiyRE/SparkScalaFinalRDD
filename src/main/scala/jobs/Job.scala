@@ -5,7 +5,7 @@ import com.example.metrics._
 import com.example.readers.CsvReaderFromFileMetricStore.getMetricStoreByName
 import com.example.readers.{CsvReaderFromFileAirline, CsvReaderFromFileAirport, CsvReaderFromFileFilePath, CsvReaderFromFileFlights, CsvReaderFromFileMetricStore}
 import com.example.schemas.{Airline, Airport, FilePath, Flight, MetricStore, TopAirportByFlight}
-import com.example.writers.{CsvWriterMetricFlightByDayOfWeek, CsvWriterMetricOnTimeAirline, CsvWriterMetricTopAirlineAndAirport, CsvWriterMetricTopAirportByFlight}
+import com.example.writers.{CsvWriterMetricDelayPercent, CsvWriterMetricDelayReasons, CsvWriterMetricFlightByDayOfWeek, CsvWriterMetricOnTimeAirline, CsvWriterMetricTopAirlineAndAirport, CsvWriterMetricTopAirportByFlight}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
@@ -76,6 +76,26 @@ class Job(config: JobConfig) extends SessionWrapper {
     CsvWriterMetricFlightByDayOfWeek.csvWriterMetricFlightByDayOfWeek.write(flightsByDayOfWeek, newFlightsByDayOfWeekMetricStore.path)
     CsvWriterMetricFlightByDayOfWeek.csvWriterMetricFlightByDayOfWeek.write(flightsByDayOfWeekAll, newFlightsByDayOfWeekMetricStore.pathAll)
 
+    /**
+     * 5
+     */
+    val delayReasonsMetricStore: MetricStore = getMetricStoreByName(initMetricStoreRDD, "DelayReasons")
+    val (delayReasonsAll, delayReasons, newDelayReasonsMetricStore) = metrics.DelayReasons(flightsRDD, delayReasonsMetricStore).calculate()
+
+
+    CsvWriterMetricDelayReasons.csvWriterMetricDelayReasons.write(delayReasons, newDelayReasonsMetricStore.path)
+    CsvWriterMetricDelayReasons.csvWriterMetricDelayReasons.write(delayReasonsAll, newDelayReasonsMetricStore.pathAll)
+
+    /**
+     * 6
+     */
+
+    val delayPercentsMetricStore: MetricStore = getMetricStoreByName(initMetricStoreRDD, "DelayPercents")
+    val (delayPercentsAll, delayPercents, newDelayPercentsMetricStore) = metrics.DelayPercents(flightsRDD, delayPercentsMetricStore).calculate()
+
+
+    CsvWriterMetricDelayPercent.csvWriterMetricDelayPercent.write(delayPercents, newDelayPercentsMetricStore.path)
+    CsvWriterMetricDelayPercent.csvWriterMetricDelayPercent.write(delayPercentsAll, newDelayPercentsMetricStore.pathAll)
   }
 }
 

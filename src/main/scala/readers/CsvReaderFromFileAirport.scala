@@ -4,7 +4,7 @@ package readers
 import schemas.Airport
 
 object CsvReaderFromFileAirport {
-  val f: Array[String] => Airport = {
+  private val f: Array[String] => Airport = {
     values =>
       Airport(
         values(0),

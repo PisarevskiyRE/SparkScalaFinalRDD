@@ -10,7 +10,7 @@ import scala.io.Source
 
 
 object CsvReaderFromFileOnTimeAirline{
-  val f: Array[String] => OnTimeAirline = {
+  private val f: Array[String] => OnTimeAirline = {
     values =>
       OnTimeAirline(
         values(0),

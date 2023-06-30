@@ -11,7 +11,7 @@ import scala.io.Source
 
 
 object CsvReaderFromFileFlights {
-  val f: Array[String] => Flight = {
+  private val f: Array[String] => Flight = {
     values =>
       Flight(
         values(0).toInt,
@@ -70,11 +70,26 @@ object CsvReaderFromFileFlights {
           case _ => values(24).toInt
         },
         values(25),
-        values(26),
-        values(27),
-        values(28),
-        values(29),
-        values(30),
+        values(26) match {
+          case "" => 0
+          case _ => values(24).toInt
+        },
+        values(27) match {
+          case "" => 0
+          case _ => values(24).toInt
+        },
+        values(28) match {
+          case "" => 0
+          case _ => values(24).toInt
+        },
+        values(29) match {
+          case "" => 0
+          case _ => values(24).toInt
+        },
+        values(30) match {
+          case "" => 0
+          case _ => values(24).toInt
+        },
         Date.valueOf(values(0) + "-" + values(1) + "-" + values(2))
       )
   }

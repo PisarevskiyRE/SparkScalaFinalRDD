@@ -5,7 +5,7 @@ import schemas.FlightByDayOfWeek
 
 object CsvReaderFromFileFlightByDayOfWeek {
 
-  val f: Array[String] => FlightByDayOfWeek = {
+  private val f: Array[String] => FlightByDayOfWeek = {
     line => FlightByDayOfWeek(line(0).toInt, line(1).toDouble)
   }
 

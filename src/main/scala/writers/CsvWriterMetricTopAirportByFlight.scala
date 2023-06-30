@@ -11,8 +11,8 @@ import scala.io.Source
 
 object CsvWriterMetricTopAirportByFlight{
 
-  val f: TopAirportByFlight => Map[String, String] = {
-    line => Map("airport" -> line.airport, "count" -> line.count.toString)
+  private val f: TopAirportByFlight => Map[String, String] = {
+    line => Map("1airport" -> line.airport, "2count" -> line.count.toString)
   }
 
   val csvWriterMetricOnTimeAirline = new CsvWriterMetric[TopAirportByFlight](f)

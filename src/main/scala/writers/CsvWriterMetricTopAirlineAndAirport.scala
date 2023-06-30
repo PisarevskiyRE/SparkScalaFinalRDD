@@ -5,8 +5,8 @@ import schemas.OnTimeAirline
 
 object CsvWriterMetricTopAirlineAndAirport{
 
-  val f: TopAirlineAndAirport => Map[String, String] = {
-    line => Map("airline" -> line.airline,"airport" -> line.airport, "count" -> line.count.toString)
+  private val f: TopAirlineAndAirport => Map[String, String] = {
+    line => Map("1airline" -> line.airline,"2airport" -> line.airport, "3count" -> line.count.toString)
   }
 
   val csvWriterMetricTopArlineAndAirport = new CsvWriterMetric[TopAirlineAndAirport](f)

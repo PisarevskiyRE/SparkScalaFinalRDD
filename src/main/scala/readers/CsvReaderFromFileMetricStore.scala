@@ -13,7 +13,7 @@ import scala.io.Source
 
 object CsvReaderFromFileMetricStore{
 
-  val f: Array[String] => MetricStore = {
+  private val f: Array[String] => MetricStore = {
     values =>
       MetricStore(
         values(0),

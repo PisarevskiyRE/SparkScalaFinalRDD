@@ -12,7 +12,7 @@ import scala.io.Source
 
 object CsvReaderFromFileAirline {
 
-  val f: Array[String] => Airline = {
+  private val f: Array[String] => Airline = {
     line => Airline(  line(0), line(1))
   }
 

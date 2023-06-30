@@ -30,10 +30,10 @@ case class Flight(
                     DIVERTED: Int,
                     CANCELLED: Int,
                     CANCELLATION_REASON: String,
-                    AIR_SYSTEM_DELAY: String,
-                    SECURITY_DELAY: String,
-                    AIRLINE_DELAY: String,
-                    LATE_AIRCRAFT_DELAY: String,
-                    WEATHER_DELAY: String,
+                    AIR_SYSTEM_DELAY: Int,
+                    SECURITY_DELAY: Int,
+                    AIRLINE_DELAY: Int,
+                    LATE_AIRCRAFT_DELAY: Int,
+                    WEATHER_DELAY: Int,
                     NormalizeDate: Date
                  ) extends FromFile

@@ -4,4 +4,4 @@ OnTimeAirlines,10,desc,2023-01-01,2010-01-01,2011-12-31,src/main/resources/outpu
 TopAirlinesAndAirports,10,desc,2023-01-01,2010-01-01,2011-12-31,src/main/resources/output/TopAirlinesAndAirports.csv,src/main/resources/output/TopAirlinesAndAirportsAll.csv
 FlightsByDayOfWeek,10,desc,2023-01-01,2010-01-01,2011-12-31,src/main/resources/output/FlightsByDayOfWeek.csv,src/main/resources/output/FlightsByDayOfWeekAll.csv
 DelayReasons,10,desc,2023-01-01,2010-01-01,2011-12-31,src/main/resources/output/DelayReasons.csv,src/main/resources/output/DelayReasonsAll.csv
-DelayPercent,10,desc,2023-01-01,2010-01-01,2011-12-31,src/main/resources/output/DelayPercent.csv,src/main/resources/output/DelayPercentAll.csv
+DelayPercents,10,desc,2023-01-01,2010-01-01,2011-12-31,src/main/resources/output/DelayPercents.csv,src/main/resources/output/DelayPercentsAll.csv
